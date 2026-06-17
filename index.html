@@ -49,6 +49,66 @@
             return null;
         }
         
+        // Load Zoho CRM SDK from multiple sources (fallback chain)
+        function loadZohoCRM() {
+            return new Promise((resolve, reject) => {
+                // First, check if ZCRM is already available (from parent window)
+                const existingZCRM = getZCRM();
+                if (existingZCRM) {
+                    console.log('ZCRM already available, skipping SDK load');
+                    resolve(existingZCRM);
+                    return;
+                }
+                
+                // Array of possible CDN URLs (try different mirrors)
+                const cdnUrls = [
+                    // Try jsDelivr first (often not blocked)
+                    'https://cdn.jsdelivr.net/npm/zoho-crm-sdk@1.0.0/dist/zoho-crm-sdk.min.js',
+                    // Try unpkg
+                    'https://unpkg.com/zoho-crm-sdk@1.0.0/dist/zoho-crm-sdk.min.js',
+                    // Try GitHub raw (if you can access it)
+                    'https://raw.githubusercontent.com/zoho/zoho-crm-sdk/master/dist/zoho-crm-sdk.min.js',
+                    // Original Zoho CDN (likely blocked)
+                    'https://cdn.zohopublic.com/crm/crm-widget-sdk/v1/zoho-crm-widget-sdk.min.js'
+                ];
+                
+                let currentUrlIndex = 0;
+                
+                function tryNextUrl() {
+                    if (currentUrlIndex >= cdnUrls.length) {
+                        reject(new Error('All CDN sources failed. Please check network/firewall settings.'));
+                        return;
+                    }
+                    
+                    const url = cdnUrls[currentUrlIndex];
+                    console.log(`Attempting to load SDK from: ${url}`);
+                    
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.async = true;
+                    
+                    script.onload = function() {
+                        console.log(`Successfully loaded SDK from: ${url}`);
+                        if (typeof ZCRM !== 'undefined') {
+                            resolve(ZCRM);
+                        } else {
+                            reject(new Error('SDK loaded but ZCRM object not found'));
+                        }
+                    };
+                    
+                    script.onerror = function() {
+                        console.warn(`Failed to load SDK from: ${url}`);
+                        currentUrlIndex++;
+                        tryNextUrl();
+                    };
+                    
+                    document.head.appendChild(script);
+                }
+                
+                tryNextUrl();
+            });
+        }
+        
         // Initialize the widget
         document.addEventListener('DOMContentLoaded', async function() {
             // Show debug info
@@ -87,18 +147,12 @@
             const loadingText = document.getElementById('loadingText');
             loadingText.textContent = 'Checking Zoho CRM connection...';
             
-            // Try to get ZCRM object
-            const ZCRM = getZCRM();
-            
-            if (!ZCRM) {
-                // ZCRM not available - this is a problem
-                showSDKError(new Error('Zoho CRM SDK not available. This usually means the widget was not opened from Zoho CRM.'));
-                return;
-            }
-            
-            loadingText.textContent = 'Initializing Zoho CRM connection...';
-            
             try {
+                // Try to load Zoho CRM SDK
+                const ZCRM = await loadZohoCRM();
+                
+                loadingText.textContent = 'Initializing Zoho CRM connection...';
+                
                 // Initialize ZCRM
                 ZCRM.init({
                     onLoad: function() {
@@ -111,7 +165,7 @@
                     }
                 });
             } catch (error) {
-                console.error('Error initializing ZCRM:', error);
+                console.error('Error loading Zoho CRM SDK:', error);
                 showSDKError(error);
             }
         });
@@ -121,7 +175,7 @@
             const errorDiv = document.createElement('div');
             errorDiv.className = 'sdk-loading';
             errorDiv.innerHTML = `
-                <h3 style="color: #856404;">⚠️ Zoho CRM Connection Issue</h3>
+                <h3 style="color: #856404;">⚠️ Zoho CRM SDK Loading Failed</h3>
                 <p style="margin: 10px 0;">
                     <strong>Error:</strong> ${error.message}
                 </p>
@@ -135,11 +189,17 @@
                 <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
                     <h4 style="color: #856404; margin-bottom: 10px;">Troubleshooting Steps:</h4>
                     <ol style="margin-left: 20px;">
+                        <li><strong>Check network access:</strong> Your corporate network may be blocking access to CDN domains. Contact your IT department to whitelist:
+                            <ul>
+                                <li><code>cdn.jsdelivr.net</code></li>
+                                <li><code>unpkg.com</code></li>
+                                <li><code>raw.githubusercontent.com</code></li>
+                            </ul>
+                        </li>
                         <li><strong>Use the correct button:</strong> Make sure you're clicking the <strong>"Open Finance Calculator"</strong> button in Zoho CRM (the one that runs the Deluge function), not a regular custom button.</li>
                         <li><strong>Check browser console (F12):</strong> Look for any errors related to ZCRM or cross-origin restrictions.</li>
-                        <li><strong>Check if ZCRM is available:</strong> In browser console, type <code>typeof ZCRM</code> and press Enter. It should return "object".</li>
-                        <li><strong>Check Zoho CRM widget settings:</strong> Ensure the widget is properly configured in Zoho CRM Setup > Developer Space > Custom Buttons.</li>
                         <li><strong>Try a different browser:</strong> Some browsers have stricter security policies for iframes.</li>
+                        <li><strong>Check Zoho CRM widget settings:</strong> Ensure the widget is properly configured in Zoho CRM Setup > Developer Space > Custom Buttons.</li>
                     </ol>
                 </div>
                 
