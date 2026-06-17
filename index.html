@@ -363,6 +363,14 @@
         .quote-summary strong {
             color: #2c3e50;
         }
+        
+        .error-message {
+            background: #fee;
+            border: 1px solid #f00;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -553,127 +561,142 @@
         let accountId = '';
         let autoSaveTimer = null;
         
-// Initialize the widget - FIXED VERSION
-document.addEventListener('DOMContentLoaded', function() {
-    // Extract recordId from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    dealId = urlParams.get('recordId');
-    
-    if (!dealId) {
-        console.error('No recordId found in URL');
-        document.getElementById('loading').innerHTML = 
-            '<p style="color: red;">Error: No Deal ID found in URL. Please open from Zoho CRM.</p>';
-        return;
-    }
-    
-    // Initialize ZCRM
-    if (typeof ZCRM !== 'undefined') {
-        ZCRM.init({
-            onLoad: function() {
-                console.log('ZCRM initialized, loading deal data...');
-                loadDealData();
-            },
-            onError: function(error) {
-                console.error('ZCRM initialization error:', error);
-                document.getElementById('loading').innerHTML = 
-                    '<p style="color: red;">Error: Failed to initialize Zoho CRM connection.</p>';
+        // Initialize the widget - FIXED VERSION
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extract recordId from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            dealId = urlParams.get('recordId');
+            
+            console.log('URL Parameters:', window.location.search);
+            console.log('Extracted Deal ID:', dealId);
+            
+            if (!dealId) {
+                showError('No Deal ID found in URL. Please open from Zoho CRM.');
+                return;
+            }
+            
+            // Initialize ZCRM
+            if (typeof ZCRM !== 'undefined') {
+                ZCRM.init({
+                    onLoad: function() {
+                        console.log('ZCRM initialized, loading deal data...');
+                        loadDealData();
+                    },
+                    onError: function(error) {
+                        console.error('ZCRM initialization error:', error);
+                        showError('Failed to initialize Zoho CRM connection: ' + error.message);
+                    }
+                });
+            } else {
+                console.error('ZCRM library not loaded');
+                showError('Zoho CRM SDK not loaded. Check internet connection.');
             }
         });
-    } else {
-        console.error('ZCRM library not loaded');
-        document.getElementById('loading').innerHTML = 
-            '<p style="color: red;">Error: Zoho CRM SDK not loaded. Check internet connection.</p>';
-    }
-});
         
-// Load deal data - FIXED VERSION
-function loadDealData() {
-    // Use ZCRM API instead of ZohoCRM.page.getViewedRecord
-    ZCRM.API.call({
-        url: `/crm/v2/Deals/${dealId}`,
-        method: 'GET'
-    }).then(function(response) {
-        if (response && response.data && response.data.length > 0) {
-            const deal = response.data[0];
-            accountId = deal.Account && deal.Account.id ? deal.Account.id : '';
-            
-            // Load account details
-            if (accountId) {
-                ZCRM.API.call({
-                    url: `/crm/v2/Accounts/${accountId}`,
-                    method: 'GET'
-                }).then(function(accountResponse) {
-                    if (accountResponse && accountResponse.data && accountResponse.data.length > 0) {
-                        document.getElementById('accountName').value = 
-                            accountResponse.data[0].Account_Name || '';
-                    }
-                }).catch(function(error) {
-                    console.error('Error loading account:', error);
-                });
-            }
-            
-            // Load existing quotes
-            loadExistingQuotes();
-            
-            // Show calculator
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <h3 style="color: #f00;">❌ Error</h3>
+                <p>${message}</p>
+                <p><strong>Current URL:</strong> ${window.location.href}</p>
+                <p><strong>Deal ID:</strong> ${dealId || 'Not found'}</p>
+                <p style="margin-top: 10px;">
+                    <button class="btn-primary" onclick="location.reload()">Retry</button>
+                    <button class="btn-info" onclick="closeWidget()">Close</button>
+                </p>
+            `;
+            document.body.insertBefore(errorDiv, document.body.firstChild);
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('calculator').style.display = 'block';
-            
-            // Create first tab
-            createNewTab();
-            
-            // Start auto-save
-            startAutoSave();
         }
-    }).catch(function(error) {
-        console.error('Error loading deal:', error);
-        document.getElementById('loading').innerHTML = 
-            '<p style="color: red;">Error loading deal data. Check console for details.</p>';
-    });
-}
         
-// Load existing quotes from subform - FIXED VERSION
-function loadExistingQuotes() {
-    ZCRM.API.call({
-        url: `/crm/v2/Deals/${dealId}/Finance_Quotes`,
-        method: 'GET'
-    }).then(function(response) {
-        if (response && response.data && response.data.length > 0) {
-            // Sort by creation date descending
-            const sortedQuotes = response.data.sort((a, b) => {
-                return new Date(b.Created_Time) - new Date(a.Created_Time);
+        // Load deal data
+        function loadDealData() {
+            ZCRM.API.call({
+                url: `/crm/v2/Deals/${dealId}`,
+                method: 'GET'
+            }).then(function(response) {
+                if (response && response.data && response.data.length > 0) {
+                    const deal = response.data[0];
+                    accountId = deal.Account && deal.Account.id ? deal.Account.id : '';
+                    
+                    // Load account details
+                    if (accountId) {
+                        ZCRM.API.call({
+                            url: `/crm/v2/Accounts/${accountId}`,
+                            method: 'GET'
+                        }).then(function(accountResponse) {
+                            if (accountResponse && accountResponse.data && accountResponse.data.length > 0) {
+                                document.getElementById('accountName').value = 
+                                    accountResponse.data[0].Account_Name || '';
+                            }
+                        }).catch(function(error) {
+                            console.error('Error loading account:', error);
+                        });
+                    }
+                    
+                    // Load existing quotes
+                    loadExistingQuotes();
+                    
+                    // Show calculator
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('calculator').style.display = 'block';
+                    
+                    // Create first tab
+                    createNewTab();
+                    
+                    // Start auto-save
+                    startAutoSave();
+                }
+            }).catch(function(error) {
+                console.error('Error loading deal:', error);
+                showError('Error loading deal data: ' + error.message);
             });
-            
-            // Take last 5
-            const last5 = sortedQuotes.slice(0, 5);
-            
-            // Update history table
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-            
-            last5.forEach(quote => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${quote.Quote_Number || 'N/A'}</td>
-                    <td>${quote.Lender || 'N/A'}</td>
-                    <td>${formatCurrency(quote.Amount_Financed)}</td>
-                    <td>${quote.Customer_Rate ? quote.Customer_Rate + '%' : 'N/A'}</td>
-                    <td>${quote.Term || 'N/A'}</td>
-                    <td>
-                        <span class="status-indicator ${quote.Preferred1 ? 'status-preferred' : 'status-saved'}"></span>
-                        ${quote.Preferred1 ? 'Preferred' : 'Saved'}
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Store quotes in memory
-            quotes = last5;
         }
-    }).catch(function(error) {
-        console.error('Error loading quotes:', error);
-    });
-}
+        
+        // Load existing quotes from subform
+        function loadExistingQuotes() {
+            ZCRM.API.call({
+                url: `/crm/v2/Deals/${dealId}/Finance_Quotes`,
+                method: 'GET'
+            }).then(function(response) {
+                if (response && response.data && response.data.length > 0) {
+                    // Sort by creation date descending
+                    const sortedQuotes = response.data.sort((a, b) => {
+                        return new Date(b.Created_Time) - new Date(a.Created_Time);
+                    });
+                    
+                    // Take last 5
+                    const last5 = sortedQuotes.slice(0, 5);
+                    
+                    // Update history table
+                    const tbody = document.getElementById('historyTableBody');
+                    tbody.innerHTML = '';
+                    
+                    last5.forEach(quote => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${quote.Quote_Number || 'N/A'}</td>
+                            <td>${quote.Lender || 'N/A'}</td>
+                            <td>${formatCurrency(quote.Amount_Financed)}</td>
+                            <td>${quote.Customer_Rate ? quote.Customer_Rate + '%' : 'N/A'}</td>
+                            <td>${quote.Term || 'N/A'}</td>
+                            <td>
+                                <span class="status-indicator ${quote.Preferred1 ? 'status-preferred' : 'status-saved'}"></span>
+                                ${quote.Preferred1 ? 'Preferred' : 'Saved'}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    // Store quotes in memory
+                    quotes = last5;
+                }
+            }).catch(function(error) {
+                console.error('Error loading quotes:', error);
+            });
+        }
         
         // Create new tab
         function createNewTab() {
@@ -770,15 +793,13 @@ function loadExistingQuotes() {
             document.getElementById('margin').value = margin.toFixed(2);
             
             // Calculate Customer Rate (using your sheet logic)
-            // This is a simplified version - you may need to adjust based on your actual formula
             let customerRate = lenderRate;
             if (margin > 0) {
-                // Simple markup: add margin percentage to lender rate
                 customerRate = lenderRate + (margin * 0.1); // Adjust multiplier as needed
             }
             document.getElementById('customerRate').value = customerRate.toFixed(2);
             
-            // Calculate monthly repayment (simple formula - you may need to adjust)
+            // Calculate monthly repayment
             const principal = amountFinanced - balloon;
             const monthlyRate = customerRate / 100 / 12;
             let monthlyRepayment = 0;
@@ -809,56 +830,56 @@ function loadExistingQuotes() {
             showToast('Quote cloned successfully', 'success');
         }
         
-// Save all quotes - FIXED VERSION
-function saveQuote() {
-    const currentContent = document.getElementById(`content-${currentTab}`);
-    if (!currentContent) return;
-    
-    const quoteData = {
-        Account: accountId ? { id: accountId } : null,
-        Asset: document.getElementById('asset').value,
-        Lender: document.getElementById('lender').value,
-        Advanced_Arrears: document.getElementById('advanceArrears').value,
-        Purchase_Price: parseFloat(document.getElementById('purchasePrice').value) || 0,
-        Establishment_Fee: parseFloat(document.getElementById('establishmentFee').value) || 0,
-        Inspection_Fee: parseFloat(document.getElementById('inspectionFee').value) || 0,
-        Amount_Financed: parseFloat(document.getElementById('amountFinanced').value) || 0,
-        Term: parseInt(document.getElementById('term').value) || 0,
-        Balloon: parseFloat(document.getElementById('balloon').value) || 0,
-        GST_Amount: parseFloat(document.getElementById('gstAmount').value) || 0,
-        GST_Month: document.getElementById('gstMonth').value,
-        Lender_Rate: parseFloat(document.getElementById('lenderRate').value) || 0,
-        Brokerage: parseFloat(document.getElementById('brokerage').value) || 0,
-        Margin1: parseFloat(document.getElementById('margin').value) || 0,
-        Customer_Rate: parseFloat(document.getElementById('customerRate').value) || 0,
-        Monthly_Repayment: parseFloat(document.getElementById('monthlyRepayment').textContent.replace(/[^0-9.-]+/g,"")) || 0,
-        Total_Repayment: parseFloat(document.getElementById('totalRepayment').textContent.replace(/[^0-9.-]+/g,"")) || 0,
-        Total_Interest: parseFloat(document.getElementById('totalInterest').textContent.replace(/[^0-9.-]+/g,"")) || 0,
-        GST_Back: parseFloat(document.getElementById('gstBack').textContent.replace(/[^0-9.-]+/g,"")) || 0,
-        GST_Back1: 'NO',
-        Last_Saved: new Date().toISOString(),
-        Quote_JSON: JSON.stringify(quoteData)
-    };
-    
-    // Generate quote number
-    quoteData.Quote_Number = 'Q-' + Date.now().toString().slice(-6);
-    
-    // Save to subform using ZCRM API
-    ZCRM.API.call({
-        url: `/crm/v2/Deals/${dealId}/Finance_Quotes`,
-        method: 'POST',
-        data: { data: [quoteData] }
-    }).then(function(response) {
-        if (response && response.data && response.data[0] && response.data[0].code === 'SUCCESS') {
-            showToast('Quote saved successfully', 'success');
-            loadExistingQuotes();
-        } else {
-            showToast('Error saving quote: ' + (response ? response.message : 'Unknown error'), 'error');
+        // Save all quotes
+        function saveQuote() {
+            const currentContent = document.getElementById(`content-${currentTab}`);
+            if (!currentContent) return;
+            
+            const quoteData = {
+                Account: accountId ? { id: accountId } : null,
+                Asset: document.getElementById('asset').value,
+                Lender: document.getElementById('lender').value,
+                Advanced_Arrears: document.getElementById('advanceArrears').value,
+                Purchase_Price: parseFloat(document.getElementById('purchasePrice').value) || 0,
+                Establishment_Fee: parseFloat(document.getElementById('establishmentFee').value) || 0,
+                Inspection_Fee: parseFloat(document.getElementById('inspectionFee').value) || 0,
+                Amount_Financed: parseFloat(document.getElementById('amountFinanced').value) || 0,
+                Term: parseInt(document.getElementById('term').value) || 0,
+                Balloon: parseFloat(document.getElementById('balloon').value) || 0,
+                GST_Amount: parseFloat(document.getElementById('gstAmount').value) || 0,
+                GST_Month: document.getElementById('gstMonth').value,
+                Lender_Rate: parseFloat(document.getElementById('lenderRate').value) || 0,
+                Brokerage: parseFloat(document.getElementById('brokerage').value) || 0,
+                Margin1: parseFloat(document.getElementById('margin').value) || 0,
+                Customer_Rate: parseFloat(document.getElementById('customerRate').value) || 0,
+                Monthly_Repayment: parseFloat(document.getElementById('monthlyRepayment').textContent.replace(/[^0-9.-]+/g,"")) || 0,
+                Total_Repayment: parseFloat(document.getElementById('totalRepayment').textContent.replace(/[^0-9.-]+/g,"")) || 0,
+                Total_Interest: parseFloat(document.getElementById('totalInterest').textContent.replace(/[^0-9.-]+/g,"")) || 0,
+                GST_Back: parseFloat(document.getElementById('gstBack').textContent.replace(/[^0-9.-]+/g,"")) || 0,
+                GST_Back1: 'NO',
+                Last_Saved: new Date().toISOString(),
+                Quote_JSON: JSON.stringify(quoteData)
+            };
+            
+            // Generate quote number
+            quoteData.Quote_Number = 'Q-' + Date.now().toString().slice(-6);
+            
+            // Save to subform using ZCRM API
+            ZCRM.API.call({
+                url: `/crm/v2/Deals/${dealId}/Finance_Quotes`,
+                method: 'POST',
+                data: { data: [quoteData] }
+            }).then(function(response) {
+                if (response && response.data && response.data[0] && response.data[0].code === 'SUCCESS') {
+                    showToast('Quote saved successfully', 'success');
+                    loadExistingQuotes();
+                } else {
+                    showToast('Error saving quote: ' + (response ? response.message : 'Unknown error'), 'error');
+                }
+            }).catch(function(error) {
+                showToast('Error saving quote: ' + error.message, 'error');
+            });
         }
-    }).catch(function(error) {
-        showToast('Error saving quote: ' + error.message, 'error');
-    });
-}
         
         // Set preferred quote
         function setPreferred() {
