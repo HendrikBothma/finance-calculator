@@ -378,6 +378,16 @@
             margin: 20px;
             border-radius: 5px;
         }
+        
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -401,7 +411,8 @@
         
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            Loading calculator...
+            <p id="loadingText">Loading calculator...</p>
+            <div class="debug-info" id="debugInfo" style="display: none;"></div>
         </div>
         
         <div id="calculator" style="display: none;">
@@ -582,39 +593,56 @@
                 script.src = 'https://cdn.zohopublic.com/crm/crm-widget-sdk/v1/zoho-crm-widget-sdk.min.js';
                 script.async = true;
                 script.onload = resolve;
-                script.onerror = () => reject(new Error('Failed to load Zoho CRM SDK'));
+                script.onerror = () => reject(new Error('Failed to load Zoho CRM SDK from CDN'));
                 document.head.appendChild(script);
             });
         }
         
         // Initialize the widget
         document.addEventListener('DOMContentLoaded', async function() {
-            // Extract recordId from URL
+            // Show debug info
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = 'block';
+            debugInfo.innerHTML = `
+                <strong>Debug Information:</strong><br>
+                Full URL: ${window.location.href}<br>
+                Query String: ${window.location.search}<br>
+                All URL Parameters:<br>
+                ${Array.from(new URLSearchParams(window.location.search).entries())
+                    .map(([key, value]) => `&nbsp;&nbsp;${key}: ${value}`)
+                    .join('<br>')}<br><br>
+                Looking for: recordId parameter
+            `;
+            
+            // Extract recordId from URL - try multiple methods
             const urlParams = new URLSearchParams(window.location.search);
-            dealId = urlParams.get('recordId');
+            dealId = urlParams.get('recordId') || 
+                     urlParams.get('id') || 
+                     urlParams.get('dealId') ||
+                     window.location.pathname.split('/').pop();
             
             console.log('URL Parameters:', window.location.search);
             console.log('Extracted Deal ID:', dealId);
             
+            // Update debug info
+            debugInfo.innerHTML += `<br><br><strong>Extracted Deal ID:</strong> ${dealId || 'Not found'}`;
+            
             if (!dealId) {
-                showError('No Deal ID found in URL. Please open from Zoho CRM.');
+                showError('No Deal ID found in URL. Please open from Zoho CRM. Make sure your custom button URL includes ?recordId=${Deals.Id}');
                 return;
             }
             
             // Show loading message
             const loadingDiv = document.getElementById('loading');
-            loadingDiv.innerHTML = `
-                <div class="spinner"></div>
-                <p>Loading Zoho CRM SDK...</p>
-                <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                    If this takes too long, check your internet connection or firewall settings.
-                </p>
-            `;
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = 'Loading Zoho CRM SDK...';
             
             try {
                 // Load Zoho CRM SDK
                 await loadZohoCRM();
                 console.log('Zoho CRM SDK loaded successfully');
+                
+                loadingText.textContent = 'Initializing Zoho CRM connection...';
                 
                 // Initialize ZCRM
                 ZCRM.init({
@@ -652,6 +680,9 @@
                 <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
                     <h4 style="color: #856404; margin-bottom: 10px;">Troubleshooting Steps:</h4>
                     <ol style="margin-left: 20px;">
+                        <li><strong>Fix Custom Button:</strong> In Zoho CRM, edit your Finance Calculator button and set the URL to:<br>
+                            <code style="background: #f0f0f0; padding: 5px; display: block; margin: 5px 0;">https://hendrikbothma.github.io/Finance-Calculator/?recordId=${dealId}</code>
+                        </li>
                         <li>Check your internet connection</li>
                         <li>Check if your corporate firewall blocks: <code>cdn.zohopublic.com</code></li>
                         <li>Try opening the URL in a different browser</li>
@@ -677,7 +708,20 @@
                 <p>${message}</p>
                 <p><strong>Current URL:</strong> ${window.location.href}</p>
                 <p><strong>Deal ID:</strong> ${dealId || 'Not found'}</p>
-                <p style="margin-top: 10px;">
+                
+                <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                    <h4 style="color: #c0392b;">How to Fix:</h4>
+                    <ol style="margin-left: 20px;">
+                        <li>Go to Zoho CRM → Setup → Developer Space → Extensions → Buttons</li>
+                        <li>Find your "Finance Calculator" button and click Edit</li>
+                        <li>In the <strong>URL</strong> field, make sure it says:<br>
+                            <code style="background: #f0f0f0; padding: 5px; display: block; margin: 5px 0;">https://hendrikbothma.github.io/Finance-Calculator/?recordId=${dealId}</code>
+                        </li>
+                        <li>Save the button and try again</li>
+                    </ol>
+                </div>
+                
+                <p style="margin-top: 15px;">
                     <button class="btn-primary" onclick="location.reload()">Retry</button>
                     <button class="btn-info" onclick="closeWidget()">Close</button>
                 </p>
