@@ -5,7 +5,260 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance Calculator Widget</title>
     <style>
-        /* [All CSS remains the same as in my previous response] */
+        /* [All CSS from previous response remains the same] */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #dee2e6;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .results h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .result-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-item .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .result-item .label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .quotes-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .quotes-table th, .quotes-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .quotes-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .quotes-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .quotes-table .preferred {
+            background: #d4edda !important;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .debug-info {
+            background: #e2e3e5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .history-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -15,7 +268,125 @@
     </div>
 
     <div id="calculator" style="display: none;">
-        <!-- [All HTML content remains the same as in my previous response] -->
+        <div class="container">
+            <div class="header">
+                <h1>Finance Calculator</h1>
+                <div>
+                    <button class="btn btn-info" onclick="generatePDF()">Generate PDF</button>
+                    <button class="btn btn-secondary" onclick="closeWidget()">Close</button>
+                </div>
+            </div>
+
+            <div class="debug-info" id="debugInfo">
+                <strong>Debug Information:</strong><br>
+                Full URL: <span id="debugUrl"></span><br>
+                Query String: <span id="debugQuery"></span><br>
+                Deal ID: <span id="debugDealId"></span>
+            </div>
+
+            <div class="tabs" id="tabsContainer">
+                <button class="tab active" data-tab="0">Quote 1</button>
+                <button class="tab" data-tab="1">Quote 2</button>
+                <button class="btn btn-primary" onclick="createNewTab()" style="padding: 8px 12px;">+ Add Quote</button>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Account Name</label>
+                    <input type="text" id="accountName" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Lender</label>
+                    <select id="lender" onchange="calculate()">
+                        <option value="">Select Lender</option>
+                        <option value="Bank A">Bank A</option>
+                        <option value="Bank B">Bank B</option>
+                        <option value="Bank C">Bank C</option>
+                        <option value="Credit Union">Credit Union</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Loan Amount (R)</label>
+                    <input type="number" id="loanAmount" value="100000" min="0" step="1000" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Term (Months)</label>
+                    <input type="number" id="term" value="60" min="12" max="84" step="12" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Lender Rate (%)</label>
+                    <input type="number" id="lenderRate" value="5" min="0" max="30" step="0.1" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Margin (%)</label>
+                    <input type="number" id="margin" value="2" min="0" max="10" step="0.1" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Customer Rate (%)</label>
+                    <input type="number" id="customerRate" value="7" min="0" max="30" step="0.1" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Monthly Payment (R)</label>
+                    <input type="number" id="monthlyPayment" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Balloon Payment (R)</label>
+                    <input type="number" id="balloonPayment" value="0" min="0" step="1000" oninput="calculate()">
+                </div>
+            </div>
+
+            <div class="results">
+                <h3>Quote Summary</h3>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="value" id="totalInterest">R 0</div>
+                        <div class="label">Total Interest</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="value" id="totalRepayment">R 0</div>
+                        <div class="label">Total Repayment</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="value" id="totalCost">R 0</div>
+                        <div class="label">Total Cost</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="value" id="effectiveRate">0%</div>
+                        <div class="label">Effective Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-success" onclick="saveQuote()">Save Quote</button>
+                <button class="btn btn-primary" onclick="calculate()">Recalculate</button>
+                <button class="btn btn-secondary" onclick="clearCurrentTab()">Clear</button>
+                <button class="btn btn-danger" onclick="deleteCurrentTab()">Delete Quote</button>
+            </div>
+
+            <div class="history-section">
+                <h3>Recent Quotes (Last 5)</h3>
+                <table class="quotes-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Lender</th>
+                            <th>Amount</th>
+                            <th>Rate</th>
+                            <th>Term</th>
+                            <th>Monthly</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quotesTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #6c757d;">No quotes saved yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -26,7 +397,54 @@
         let accountId = '';
         let autoSaveTimer = null;
         
-        // Try to get ZCRM object from parent window
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show debug info
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = 'block';
+            document.getElementById('debugUrl').textContent = window.location.href;
+            document.getElementById('debugQuery').textContent = window.location.search;
+            
+            // Extract recordId from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            dealId = urlParams.get('recordId') || 
+                     urlParams.get('id') || 
+                     urlParams.get('dealId');
+            
+            document.getElementById('debugDealId').textContent = dealId || 'Not found';
+            
+            if (!dealId) {
+                showError('No Deal ID found in URL. Please open from Zoho CRM using the "Open Finance Calculator" button.');
+                return;
+            }
+            
+            // Show loading message
+            const loadingDiv = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = 'Connecting to Zoho CRM...';
+            
+            // Try to get ZCRM object from parent window
+            const ZCRM = getZCRM();
+            
+            if (!ZCRM) {
+                showError('Zoho CRM SDK not available. Please ensure you\'re opening this widget from within Zoho CRM using the correct button.');
+                return;
+            }
+            
+            // Initialize ZCRM
+            ZCRM.init({
+                onLoad: function() {
+                    console.log('ZCRM initialized, loading deal data...');
+                    loadDealData();
+                },
+                onError: function(error) {
+                    console.error('ZCRM initialization error:', error);
+                    showError('Failed to initialize Zoho CRM connection: ' + error.message);
+                }
+            });
+        });
+        
+        // Get ZCRM object from parent window
         function getZCRM() {
             // Check if ZCRM is already available in this window
             if (typeof ZCRM !== 'undefined') {
@@ -49,175 +467,22 @@
             return null;
         }
         
-        // Load Zoho CRM SDK from multiple sources (fallback chain)
-        function loadZohoCRM() {
-            return new Promise((resolve, reject) => {
-                // First, check if ZCRM is already available (from parent window)
-                const existingZCRM = getZCRM();
-                if (existingZCRM) {
-                    console.log('ZCRM already available, skipping SDK load');
-                    resolve(existingZCRM);
-                    return;
-                }
-                
-                // Array of possible CDN URLs (try different mirrors)
-                const cdnUrls = [
-                    // Try jsDelivr first (often not blocked)
-                    'https://cdn.jsdelivr.net/npm/zoho-crm-sdk@1.0.0/dist/zoho-crm-sdk.min.js',
-                    // Try unpkg
-                    'https://unpkg.com/zoho-crm-sdk@1.0.0/dist/zoho-crm-sdk.min.js',
-                    // Try GitHub raw (if you can access it)
-                    'https://raw.githubusercontent.com/zoho/zoho-crm-sdk/master/dist/zoho-crm-sdk.min.js',
-                    // Original Zoho CDN (likely blocked)
-                    'https://cdn.zohopublic.com/crm/crm-widget-sdk/v1/zoho-crm-widget-sdk.min.js'
-                ];
-                
-                let currentUrlIndex = 0;
-                
-                function tryNextUrl() {
-                    if (currentUrlIndex >= cdnUrls.length) {
-                        reject(new Error('All CDN sources failed. Please check network/firewall settings.'));
-                        return;
-                    }
-                    
-                    const url = cdnUrls[currentUrlIndex];
-                    console.log(`Attempting to load SDK from: ${url}`);
-                    
-                    const script = document.createElement('script');
-                    script.src = url;
-                    script.async = true;
-                    
-                    script.onload = function() {
-                        console.log(`Successfully loaded SDK from: ${url}`);
-                        if (typeof ZCRM !== 'undefined') {
-                            resolve(ZCRM);
-                        } else {
-                            reject(new Error('SDK loaded but ZCRM object not found'));
-                        }
-                    };
-                    
-                    script.onerror = function() {
-                        console.warn(`Failed to load SDK from: ${url}`);
-                        currentUrlIndex++;
-                        tryNextUrl();
-                    };
-                    
-                    document.head.appendChild(script);
-                }
-                
-                tryNextUrl();
-            });
-        }
-        
-        // Initialize the widget
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Show debug info
-            const debugInfo = document.getElementById('debugInfo');
-            debugInfo.style.display = 'block';
-            debugInfo.innerHTML = `
-                <strong>Debug Information:</strong><br>
-                Full URL: ${window.location.href}<br>
-                Query String: ${window.location.search}<br>
-                All URL Parameters:<br>
-                ${Array.from(new URLSearchParams(window.location.search).entries())
-                    .map(([key, value]) => `&nbsp;&nbsp;${key}: ${value}`)
-                    .join('<br>')}<br><br>
-                Looking for: recordId parameter
-            `;
-            
-            // Extract recordId from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            dealId = urlParams.get('recordId') || 
-                     urlParams.get('id') || 
-                     urlParams.get('dealId');
-            
-            console.log('URL Parameters:', window.location.search);
-            console.log('Extracted Deal ID:', dealId);
-            
-            // Update debug info
-            debugInfo.innerHTML += `<br><br><strong>Extracted Deal ID:</strong> ${dealId || 'Not found'}`;
-            
-            if (!dealId) {
-                showError('No Deal ID found in URL. Please open from Zoho CRM using the "Open Finance Calculator" button.');
-                return;
-            }
-            
-            // Show loading message
-            const loadingDiv = document.getElementById('loading');
-            const loadingText = document.getElementById('loadingText');
-            loadingText.textContent = 'Checking Zoho CRM connection...';
-            
-            try {
-                // Try to load Zoho CRM SDK
-                const ZCRM = await loadZohoCRM();
-                
-                loadingText.textContent = 'Initializing Zoho CRM connection...';
-                
-                // Initialize ZCRM
-                ZCRM.init({
-                    onLoad: function() {
-                        console.log('ZCRM initialized, loading deal data...');
-                        loadDealData();
-                    },
-                    onError: function(error) {
-                        console.error('ZCRM initialization error:', error);
-                        showError('Failed to initialize Zoho CRM connection: ' + error.message);
-                    }
-                });
-            } catch (error) {
-                console.error('Error loading Zoho CRM SDK:', error);
-                showSDKError(error);
-            }
-        });
-        
-        // Show SDK loading error with troubleshooting steps
-        function showSDKError(error) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'sdk-loading';
-            errorDiv.innerHTML = `
-                <h3 style="color: #856404;">⚠️ Zoho CRM SDK Loading Failed</h3>
-                <p style="margin: 10px 0;">
-                    <strong>Error:</strong> ${error.message}
-                </p>
-                <p style="margin: 10px 0;">
-                    <strong>Deal ID:</strong> ${dealId}
-                </p>
-                <p style="margin: 10px 0;">
-                    <strong>Current URL:</strong> ${window.location.href}
-                </p>
-                
-                <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                    <h4 style="color: #856404; margin-bottom: 10px;">Troubleshooting Steps:</h4>
-                    <ol style="margin-left: 20px;">
-                        <li><strong>Check network access:</strong> Your corporate network may be blocking access to CDN domains. Contact your IT department to whitelist:
-                            <ul>
-                                <li><code>cdn.jsdelivr.net</code></li>
-                                <li><code>unpkg.com</code></li>
-                                <li><code>raw.githubusercontent.com</code></li>
-                            </ul>
-                        </li>
-                        <li><strong>Use the correct button:</strong> Make sure you're clicking the <strong>"Open Finance Calculator"</strong> button in Zoho CRM (the one that runs the Deluge function), not a regular custom button.</li>
-                        <li><strong>Check browser console (F12):</strong> Look for any errors related to ZCRM or cross-origin restrictions.</li>
-                        <li><strong>Try a different browser:</strong> Some browsers have stricter security policies for iframes.</li>
-                        <li><strong>Check Zoho CRM widget settings:</strong> Ensure the widget is properly configured in Zoho CRM Setup > Developer Space > Custom Buttons.</li>
-                    </ol>
-                </div>
-                
-                <p style="margin-top: 15px;">
-                    <button class="btn-primary" onclick="location.reload()">Retry</button>
-                    <button class="btn-info" onclick="closeWidget()">Close</button>
-                </p>
-            `;
-            document.body.insertBefore(errorDiv, document.body.firstChild);
-            document.getElementById('loading').style.display = 'none';
-        }
-        
         // Show error message
         function showError(message) {
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
+            
+            const calculatorDiv = document.getElementById('calculator');
+            if (calculatorDiv) {
+                calculatorDiv.style.display = 'none';
+            }
+            
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.innerHTML = `
-                <h3 style="color: #f00;">❌ Error</h3>
+                <h3 style="color: #721c24;">❌ Error</h3>
                 <p>${message}</p>
                 <p><strong>Current URL:</strong> ${window.location.href}</p>
                 <p><strong>Deal ID:</strong> ${dealId || 'Not found'}</p>
@@ -228,12 +493,11 @@
                 </div>
                 
                 <p style="margin-top: 15px;">
-                    <button class="btn-primary" onclick="location.reload()">Retry</button>
-                    <button class="btn-info" onclick="closeWidget()">Close</button>
+                    <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+                    <button class="btn btn-info" onclick="closeWidget()">Close</button>
                 </p>
             `;
             document.body.insertBefore(errorDiv, document.body.firstChild);
-            document.getElementById('loading').style.display = 'none';
         }
         
         // Load deal data
@@ -317,7 +581,316 @@
             });
         }
         
-        // [Rest of the JavaScript functions remain the same as in my previous response]
+        // Render quotes table
+        function renderQuotes() {
+            const tbody = document.getElementById('quotesTableBody');
+            if (!tbody) return;
+            
+            if (quotes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #6c757d;">No quotes saved yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = quotes.map((quote, index) => `
+                <tr class="${quote.preferred ? 'preferred' : ''}">
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td>${quote.lender}</td>
+                    <td>R ${quote.loanAmount.toLocaleString()}</td>
+                    <td>${quote.customerRate}%</td>
+                    <td>${quote.term} months</td>
+                    <td>R ${quote.monthlyPayment.toLocaleString()}</td>
+                    <td>R ${quote.totalRepayment.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="loadQuote(${index})">Load</button>
+                        <button class="btn btn-sm btn-success" onclick="markPreferred(${index})">★</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteQuote(${index})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Create new tab
+        function createNewTab() {
+            const tabsContainer = document.getElementById('tabsContainer');
+            const tabCount = tabsContainer.querySelectorAll('.tab').length;
+            
+            const newTab = document.createElement('button');
+            newTab.className = 'tab';
+            newTab.dataset.tab = tabCount;
+            newTab.textContent = `Quote ${tabCount + 1}`;
+            newTab.onclick = () => switchTab(tabCount);
+            
+            tabsContainer.insertBefore(newTab, tabsContainer.lastElementChild);
+            
+            // Add to quotes array
+            quotes.push({
+                lender: '',
+                loanAmount: 100000,
+                term: 60,
+                lenderRate: 5,
+                margin: 2,
+                customerRate: 7,
+                monthlyPayment: 0,
+                balloonPayment: 0,
+                totalInterest: 0,
+                totalRepayment: 0,
+                preferred: false
+            });
+            
+            switchTab(tabCount);
+        }
+        
+        // Switch tab
+        function switchTab(tabIndex) {
+            currentTab = tabIndex;
+            
+            // Update tab styles
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab[data-tab="${tabIndex}"]`).classList.add('active');
+            
+            // Load quote data into form
+            const quote = quotes[tabIndex];
+            if (quote) {
+                document.getElementById('lender').value = quote.lender;
+                document.getElementById('loanAmount').value = quote.loanAmount;
+                document.getElementById('term').value = quote.term;
+                document.getElementById('lenderRate').value = quote.lenderRate;
+                document.getElementById('margin').value = quote.margin;
+                document.getElementById('customerRate').value = quote.customerRate;
+                document.getElementById('balloonPayment').value = quote.balloonPayment;
+                
+                calculate();
+            }
+        }
+        
+        // Calculate loan details
+        function calculate() {
+            const loanAmount = parseFloat(document.getElementById('loanAmount').value) || 0;
+            const term = parseInt(document.getElementById('term').value) || 60;
+            const customerRate = parseFloat(document.getElementById('customerRate').value) || 0;
+            const balloonPayment = parseFloat(document.getElementById('balloonPayment').value) || 0;
+            
+            // Calculate monthly payment
+            const monthlyRate = customerRate / 100 / 12;
+            let monthlyPayment = 0;
+            
+            if (monthlyRate > 0) {
+                monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / 
+                               (Math.pow(1 + monthlyRate, term) - 1);
+            } else {
+                monthlyPayment = loanAmount / term;
+            }
+            
+            // Adjust for balloon payment
+            if (balloonPayment > 0) {
+                monthlyPayment = (loanAmount - balloonPayment) / term;
+            }
+            
+            const totalRepayment = monthlyPayment * term + balloonPayment;
+            const totalInterest = totalRepayment - loanAmount;
+            const totalCost = totalRepayment;
+            
+            // Update display
+            document.getElementById('monthlyPayment').value = Math.round(monthlyPayment);
+            document.getElementById('totalInterest').textContent = `R ${Math.round(totalInterest).toLocaleString()}`;
+            document.getElementById('totalRepayment').textContent = `R ${Math.round(totalRepayment).toLocaleString()}`;
+            document.getElementById('totalCost').textContent = `R ${Math.round(totalCost).toLocaleString()}`;
+            document.getElementById('effectiveRate').textContent = `${customerRate.toFixed(2)}%`;
+            
+            // Update current quote
+            quotes[currentTab].lender = document.getElementById('lender').value;
+            quotes[currentTab].loanAmount = loanAmount;
+            quotes[currentTab].term = term;
+            quotes[currentTab].lenderRate = parseFloat(document.getElementById('lenderRate').value);
+            quotes[currentTab].margin = parseFloat(document.getElementById('margin').value);
+            quotes[currentTab].customerRate = customerRate;
+            quotes[currentTab].monthlyPayment = Math.round(monthlyPayment);
+            quotes[currentTab].balloonPayment = balloonPayment;
+            quotes[currentTab].totalInterest = Math.round(totalInterest);
+            quotes[currentTab].totalRepayment = Math.round(totalRepayment);
+        }
+        
+        // Save quote to subform
+        function saveQuote() {
+            const quote = quotes[currentTab];
+            
+            if (!quote.lender) {
+                alert('Please select a lender');
+                return;
+            }
+            
+            ZCRM.API.call({
+                url: `/crm/v2/Deals/${dealId}/Finance_Quotes`,
+                method: 'POST',
+                data: [{
+                    Lender_Name: quote.lender,
+                    Loan_Amount: quote.loanAmount,
+                    Term_Months: quote.term,
+                    Lender_Rate: quote.lenderRate,
+                    Margin: quote.margin,
+                    Customer_Rate: quote.customerRate,
+                    Monthly_Payment: quote.monthlyPayment,
+                    Balloon_Payment: quote.balloonPayment,
+                    Total_Interest: quote.totalInterest,
+                    Total_Repayment: quote.totalRepayment,
+                    Preferred: quote.preferred ? 'Yes' : 'No'
+                }]
+            }).then(function(response) {
+                if (response && response.data && response.data[0].code === 'SUCCESS') {
+                    alert('Quote saved successfully!');
+                    loadExistingQuotes();
+                }
+            }).catch(function(error) {
+                console.error('Error saving quote:', error);
+                alert('Error saving quote: ' + error.message);
+            });
+        }
+        
+        // Mark as preferred
+        function markPreferred(index) {
+            const quote = quotes[index];
+            quote.preferred = !quote.preferred;
+            
+            ZCRM.API.call({
+                url: `/crm/v2/Deals/${dealId}/Finance_Quotes/${quote.id}`,
+                method: 'PUT',
+                data: [{
+                    Preferred: quote.preferred ? 'Yes' : 'No'
+                }]
+            }).then(function(response) {
+                if (response && response.data && response.data[0].code === 'SUCCESS') {
+                    renderQuotes();
+                }
+            }).catch(function(error) {
+                console.error('Error updating preferred:', error);
+            });
+        }
+        
+        // Delete quote
+        function deleteQuote(index) {
+            if (!confirm('Are you sure you want to delete this quote?')) return;
+            
+            const quote = quotes[index];
+            
+            ZCRM.API.call({
+                url: `/crm/v2/Deals/${dealId}/Finance_Quotes/${quote.id}`,
+                method: 'DELETE'
+            }).then(function(response) {
+                if (response && response.data && response.data[0].code === 'SUCCESS') {
+                    quotes.splice(index, 1);
+                    renderQuotes();
+                    
+                    // If we deleted the current tab, switch to first tab
+                    if (index === currentTab) {
+                        switchTab(0);
+                    }
+                }
+            }).catch(function(error) {
+                console.error('Error deleting quote:', error);
+                alert('Error deleting quote: ' + error.message);
+            });
+        }
+        
+        // Load quote into current tab
+        function loadQuote(index) {
+            switchTab(index);
+        }
+        
+        // Clear current tab
+        function clearCurrentTab() {
+            document.getElementById('lender').value = '';
+            document.getElementById('loanAmount').value = 100000;
+            document.getElementById('term').value = 60;
+            document.getElementById('lenderRate').value = 5;
+            document.getElementById('margin').value = 2;
+            document.getElementById('customerRate').value = 7;
+            document.getElementById('balloonPayment').value = 0;
+            
+            calculate();
+        }
+        
+        // Delete current tab
+        function deleteCurrentTab() {
+            if (quotes.length <= 1) {
+                alert('You must have at least one quote');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this quote?')) return;
+            
+            const quote = quotes[currentTab];
+            
+            if (quote.id) {
+                ZCRM.API.call({
+                    url: `/crm/v2/Deals/${dealId}/Finance_Quotes/${quote.id}`,
+                    method: 'DELETE'
+                }).then(function(response) {
+                    if (response && response.data && response.data[0].code === 'SUCCESS') {
+                        quotes.splice(currentTab, 1);
+                        renderQuotes();
+                        
+                        // Remove tab button
+                        const tabToRemove = document.querySelector(`.tab[data-tab="${currentTab}"]`);
+                        if (tabToRemove) {
+                            tabToRemove.remove();
+                        }
+                        
+                        // Switch to first tab
+                        switchTab(0);
+                    }
+                }).catch(function(error) {
+                    console.error('Error deleting quote:', error);
+                    alert('Error deleting quote: ' + error.message);
+                });
+            } else {
+                // Just remove from array (not saved yet)
+                quotes.splice(currentTab, 1);
+                renderQuotes();
+                
+                // Remove tab button
+                const tabToRemove = document.querySelector(`.tab[data-tab="${currentTab}"]`);
+                if (tabToRemove) {
+                    tabToRemove.remove();
+                }
+                
+                // Switch to first tab
+                switchTab(0);
+            }
+        }
+        
+        // Auto-save
+        function startAutoSave() {
+            autoSaveTimer = setInterval(function() {
+                const quote = quotes[currentTab];
+                if (quote.lender && quote.loanAmount > 0) {
+                    // Auto-save logic could go here
+                    // For now, just log
+                    console.log('Auto-save check:', quote);
+                }
+            }, 30000); // Every 30 seconds
+        }
+        
+        // Generate PDF
+        function generatePDF() {
+            // This will call your Deluge function
+            ZCRM.API.call({
+                url: `/crm/v2/actions/generate_quote_pdf`,
+                method: 'POST',
+                data: {
+                    record_id: dealId,
+                    quotes: quotes
+                }
+            }).then(function(response) {
+                if (response && response.data && response.data[0].code === 'SUCCESS') {
+                    alert('PDF generated successfully!');
+                }
+            }).catch(function(error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF: ' + error.message);
+            });
+        }
         
         // Close widget
         function closeWidget() {
@@ -327,6 +900,13 @@
                 window.close();
             }
         }
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+        });
     </script>
 </body>
 </html>
